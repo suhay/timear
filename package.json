@@ -36,9 +36,12 @@
   },
   "scripts": {
     "tsc": "tsc",
-    "dev": "webpack serve --hot --open"
+    "compile": "tsc --build",
+    "dev": "webpack serve --hot --open",
+    "build": "yarn compile && webpack --config webpack.prod.js"
   },
   "dependencies": {
+    "file-loader": "^6.2.0",
     "styled-components": "^5.2.1"
   }
 }

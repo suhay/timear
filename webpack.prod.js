@@ -2,11 +2,10 @@ const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
-  mode: "development",
+  mode: "production",
   entry: {
     'timear': './src/index.tsx',
   },
-  devtool: 'inline-source-map',
   module: {
     rules: [
       {
@@ -33,12 +32,6 @@ module.exports = {
   output: {
     filename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
-  },
-  devServer: {
-    contentBase: path.join(__dirname, 'dist'),
-    compress: true,
-    port: 9000,
-    hot: true,
   },
   plugins: [
     new HtmlWebpackPlugin({

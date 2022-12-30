@@ -1,79 +1,98 @@
-import { useEffect, useReducer, useState } from "react"
+import { useCallback, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 import { Time } from './time'
 import useRainbow from '../hooks/useRainbow'
+//@ts-ignore
+import bellMp3 from '../audio/Meditation-bell-sound.mp3'
 
-export type Action =
-  | { type: 'set'; count: number }
-  | { type: 'decrement' }
-  | { type: 'reset' }
-  | { type: 'increment' }
+let count = 0
 
-type State = {
-  count: number
-  initCount: number
+const tickDown = () => {
+  count -= 1
 }
 
-const initialState: State = {
-  count: 0,
-  initCount: 0
-}
+const intervalDelay = 1300
+const transitionDelay = intervalDelay * 4.25
 
 export const App = () => {
-  const intervalDelay = 1300
-  const transitionDelay = intervalDelay * 4.25
-
-  const [showInput, setShowInput] = useState(true)
+  const bell = new Audio(bellMp3)
   const [counting, setCounting] = useState(false)
-  const [timer, setTimer] = useState<NodeJS.Timeout>()
+  const [done, setDone] = useState(false)
+  const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout>()
+  const [time, setTimeVal] = useState('00:00:00')
+  const [colorPos, setColorPos] = useState(0)
 
-  const [state, dispatch] = useReducer<(state: State, action: Action) => State>((state: State, action: Action) => {
-    switch (action.type) {
-      case 'set':
-        return {
-          initCount: action.count,
-          count: action.count
-        }
-      case 'decrement':
-        if (state.count - 1 <= 0) {
-          clearInterval(timer)
-        }
-        return {
-          ...state,
-          count: state.count - 1
-        }
-      case 'increment':
-        return {
-          ...state,
-          count: state.count + 1
-        }
-      case 'reset':
-        setCounting(false)
-        setShowInput(true)
-        if (timer) {
-          clearInterval(timer)
-          setTimer(undefined)
-        }
-        return {
-          count: 0,
-          initCount: 0
-        }
-      default:
-        throw new Error()
+  const setTime = useCallback(
+    (val: string) => {
+      const parts = val.replace(/:/g, '')
+      let shiftLeft = parts
+      if (parts.length > 6) {
+        shiftLeft = parts.substring(parts.length - 6)
+      }
+      setTimeVal(
+        shiftLeft
+          .padEnd(6, '0')
+          .match(/.{1,2}/g)
+          .join(':'),
+      )
+    },
+    [setTimeVal],
+  )
+
+  const reset = useCallback(() => {
+    setCounting(false)
+    setDone(false)
+    setTimeVal('00:00:00')
+
+    count = 0
+    setColorPos(0)
+
+    if (timerInterval) {
+      clearInterval(timerInterval)
+      setTimerInterval(undefined)
     }
-  }, initialState)
+  }, [setCounting, setDone, setTime, timerInterval, setTimerInterval, setColorPos])
+
+  const start = useCallback(() => {
+    const convertTime = time.split(':').reduce((total, val, i) => {
+      const s = parseInt(val, 10)
+      if (i === 0) {
+        return total + s * 60 * 60
+      }
+      if (i === 1) {
+        return total + s * 60
+      }
+      return total + s
+    }, 0)
+
+    count = convertTime
+    setColorPos(count)
+
+    setCounting(true)
+    setDone(false)
+    bell.pause()
+  }, [time, setCounting, setDone, setColorPos])
 
   useEffect(() => {
-    if (!!state.count && !showInput && !counting) {
-      setCounting(true)
-      const t = setInterval(() => dispatch({ type: 'decrement' }), 1000)
-      setTimer(t)
-    }
-    return clearInterval(timer)
-  }, [showInput])
+    if (!counting) return
 
-  const colors = useRainbow({ intervalCounter: state.count })
+    const t = setInterval(() => {
+      tickDown()
+      setColorPos(count)
+
+      if (count <= 0) {
+        clearInterval(t)
+        setDone(true)
+        setCounting(false)
+        bell.play()
+      }
+    }, 1000)
+
+    setTimerInterval(t)
+  }, [counting, setColorPos, setDone, setCounting])
+
+  const colors = useRainbow({ intervalCounter: colorPos })
   const colorKeys = Object.keys(colors)
 
   return (
@@ -95,9 +114,14 @@ export const App = () => {
         `,
       }}
     >
-      <Time count={state.count} initCount={state.initCount} dispatch={dispatch} setShowInput={setShowInput} showInput={showInput} counting={counting} />
-      <button onClick={() => dispatch({ type: 'increment' })}>+</button>
-      <button onClick={() => dispatch({ type: 'decrement' })}>-</button>
+      <Time
+        start={start}
+        reset={reset}
+        counting={counting}
+        time={time}
+        setTime={setTime}
+        done={done}
+      />
     </ColorBox>
   )
 }

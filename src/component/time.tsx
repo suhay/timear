@@ -1,91 +1,91 @@
 import styled, { css } from 'styled-components'
 
-import { Action } from './app'
-
 type Props = {
-  count: number
-  initCount: number
-  showInput: boolean
-  dispatch: React.Dispatch<Action>
-  setShowInput: React.Dispatch<React.SetStateAction<boolean>>
+  time: string
+  start: () => void
+  reset: () => void
+  setTime: (val: string) => void
   counting: boolean
+  done: boolean
 }
 
-export const Time = ({ 
-  count,
-  initCount,
-  showInput,
-  dispatch,
-  setShowInput,
-  counting,
-}: Props) => {
+export const Time = ({ time, start, reset, setTime, done, counting }: Props) => {
   return (
-    <Section showInput={showInput} done={counting && !count}>
-      {initCount <= count + 3 && (
-        <div className='setTimer'>
-          <input type={'number'} value={initCount} onChange={(e) => dispatch({ type: 'set', count: parseInt(e.target.value, 10) })} />
-          <button onClick={() => setShowInput(false)}>Go</button>
-        </div>
-      )}
-      {counting && !count && (
-        <div className="done">
-          <div>TIME!</div>
-          <button onClick={() => {
-            dispatch({ type: 'reset' })
-          }}>Reset</button>
-        </div>
-      )}
+    <Section counting={counting} done={done}>
+      {done && <div className='done'>Time!</div>}
+      <div className='setTimer'>
+        <input
+          placeholder='00:00:00'
+          pattern='[0-9]{2}:[0-9]{2}:[0-9]{2}'
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+        />
+        <button onClick={() => start()}>Go</button>
+        {done && <button onClick={() => reset()}>Reset</button>}
+      </div>
     </Section>
   )
 }
 
 type SectionProps = {
-  showInput: boolean
+  counting: boolean
   done: boolean
 }
 
 const Section = styled.section`
-  background: #00000014;
-  padding: 10px;
-  border-radius: 6px;
-  box-shadow: 0px 0px 12px 5px #00000014;
+  font-family: 'helvetica';
   display: flex;
-  flex-direction: column;
   opacity: 0;
+  flex-direction: column;
   transition: opacity 2s ease-in 1s;
 
   .done {
+    justify-content: center;
+    color: #fff;
+    font-size: 30px;
     display: none;
   }
 
-  ${(props: SectionProps) => props.showInput && css`
-    opacity: 1;
-  `}
+  ${(props: SectionProps) =>
+    !props.counting &&
+    css`
+      opacity: 1;
+    `}
 
-  ${(props: SectionProps) => props.done && css`
-    opacity: 1;
+  ${(props: SectionProps) =>
+    props.done &&
+    css`
+      opacity: 1;
 
-    .done {
-      display: flex;
-    }
-  `}
+      .done {
+        display: flex;
+      }
+    `}
 
   input {
     display: flex;
-    width: 50px;
     background: none;
     border: 0;
     text-align: center;
     font-size: 30px;
-    color: #FFF;
+    color: #fff;
     padding: 5px 9px;
+    width: 150px;
   }
 
   button {
     background: none;
-    border: 0;
-    font-size: 30px;
-    color: #FFF;
+    font-size: 14px;
+    color: #fff;
     cursor: pointer;
+    border: 2px solid;
+    border-radius: 50%;
+    height: 55px;
+    width: 55px;
+    margin-left: 8px;
+  }
+
+  .setTimer {
+    display: flex;
   }
 `
