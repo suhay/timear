@@ -7,17 +7,26 @@ permissions:
   contents: write
 jobs:
   build-and-deploy:
-    concurrency: ci-${{ github.ref }} # Recommended if you intend to make multiple deployments in quick succession.
+    concurrency: ci-${{ github.ref }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v3
 
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 'v16.13.2'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install Yarn
+        run: npm install -g yarn
+
       - name: Install and Build 🔧
         run: |
-          npm run build
+          yarn install --frozen-lockfile
+          yarn build
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: dist # The folder the action should deploy.
+          folder: dist
