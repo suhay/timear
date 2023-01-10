@@ -13,11 +13,6 @@ module.exports = {
         loader: 'babel-loader',
       },
       {
-        test: /\.js$/,
-        use: ["source-map-loader"],
-        enforce: "pre"
-      },
-      {
         test: /\.(mp3)$/,
         use: 'file-loader',
       },

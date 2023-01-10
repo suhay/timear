@@ -3,7 +3,8 @@ import styled from 'styled-components'
 
 import { Time } from './time'
 import useRainbow from '../hooks/useRainbow'
-//@ts-ignore
+import { useWakeLock } from '../hooks/useWakeLock'
+// @ts-expect-error Cannot find module '../audio/Meditation-bell-sound.mp3' or its corresponding type declarations.
 import bellMp3 from '../audio/Meditation-bell-sound.mp3'
 
 let count = 0
@@ -22,6 +23,7 @@ export const App = () => {
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout>()
   const [time, setTimeVal] = useState('00:00:00')
   const [colorPos, setColorPos] = useState(0)
+  const wakeLock = useWakeLock()
 
   const setTime = useCallback(
     (val: string) => {
@@ -68,10 +70,10 @@ export const App = () => {
 
     count = convertTime
     setColorPos(count)
-
     setCounting(true)
     setDone(false)
     bell.pause()
+    wakeLock.request()
   }, [time, setCounting, setDone, setColorPos])
 
   useEffect(() => {
@@ -86,6 +88,7 @@ export const App = () => {
         setDone(true)
         setCounting(false)
         bell.play()
+        wakeLock.release()
       }
     }, 1000)
 
